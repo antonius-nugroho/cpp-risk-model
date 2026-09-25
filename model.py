@@ -136,8 +136,9 @@ def simulate_unit(cfg, unit, n, seed, disabled=frozenset(), plan=False):
     co2_t = coal_kg * gcv * KCAL_TO_TJ * float(const.get("emission_factor_coal_tco2_tj", 96.1))
 
     eco = cfg.get("economics", {})
-    fuel_cost = (coal_kg / 1000 * eco.get("coal_price_rp_t", 0) + bio_kg / 1000 * eco.get("biomass_price_rp_t", 0)) / 1e9
-    energy_value = float(uc.get("energy_value_rp_kwh", eco.get("energy_value_rp_kwh", 0)))  # unit BPP, else plant value
+    price = lambda key: float(uc.get(key, eco.get(key, 0)))  # unit price from the pricing file, else plant value
+    fuel_cost = (coal_kg / 1000 * price("coal_price_rp_t") + bio_kg / 1000 * price("biomass_price_rp_t")) / 1e9
+    energy_value = price("energy_value_rp_kwh")
     lost_value = (potential_net_mwh - net_mwh) * 1000 * energy_value / 1e9
 
     out = pd.DataFrame({

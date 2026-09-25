@@ -1,8 +1,8 @@
-"""Excel templates for the three uploads (failure log, Data Pengusahaan, BPP).
+"""Excel templates for the three uploads (failure log, Data Pengusahaan, pricing).
 
 Each template has an empty data sheet first (the sheet the loaders read), a "Columns" sheet explaining every
 column with an example value, and - for the failure log - a "Status Mapping" sheet in the layout load_mapping reads.
-The column lists are kept in line with calibrate.FAILURE_COLUMNS / PRODUCTION_COLUMNS / BPP_COLUMNS.
+The column lists are kept in line with calibrate.FAILURE_COLUMNS / PRODUCTION_COLUMNS / PRICING_COLUMNS.
 
     python -m app_lib.templates [out_dir]     # writes the three templates to templates/
 """
@@ -48,7 +48,7 @@ FAILURE_OPTIONAL = [
 
 PRODUCTION = [
     ("end_of_month", "date", "Last day of the reporting month (one row per unit per month)", "2025-01-31", "date"),
-    ("unit", "text", "Unit name - same spelling as unit_no in the failure log and unit_name in BPP", "Unit 1", "text"),
+    ("unit", "text", "Unit name - same spelling as unit_no in the failure log and unit_name in Pricing", "Unit 1", "text"),
     ("kwh_produksi_kwh", "kWh", "Gross generation", 62000000, "number"),
     ("kwh_netto_penjualan_kwh", "kWh", "Net generation / sales", 55000000, "number"),
     ("ph_periodehours_jam", "hours", "Period hours in the month", 744, "number"),
@@ -74,9 +74,11 @@ PRODUCTION = [
     ("rencana_pemakaian_batubara_kg", "kg", "Planned coal consumption", 40000000, "number"),
 ]
 
-BPP = [
+PRICING = [
     ("month", "date", "Last day of the month - matched to end_of_month in Data Pengusahaan", "2025-01-31", "date"),
-    ("bpp_rp_kwh", "Rp/kWh", "Cost of generation (BPP) for that unit and month", 850.25, "number"),
+    ("coal_price_rp_per_ton", "Rp/ton", "Coal price for that unit and month", 1850000, "number"),
+    ("biomass_price_rp_per_ton", "Rp/ton", "Biomass price for that unit and month", 860000, "number"),
+    ("bpp_rp_kwh", "Rp/kWh", "Biaya Pokok Penyediaan (BPP) for that unit and month - values the lost energy", 850.25, "number"),
     ("unit_name", "text", "Unit name - same spelling as 'unit' in Data Pengusahaan", "Unit 1", "text"),
 ]
 
@@ -188,28 +190,29 @@ def production_template() -> bytes:
     return _save(wb)
 
 
-def bpp_template() -> bytes:
+def pricing_template() -> bytes:
     wb = Workbook()
     ws = wb.active
-    ws.title = "BPP"
-    _data_sheet(ws, BPP)
-    _columns_sheet(wb, "BPP template (optional upload)", [
+    ws.title = "Pricing"
+    _data_sheet(ws, PRICING)
+    _columns_sheet(wb, "Pricing template (optional upload)", [
         "One row per unit per month, in the first sheet. Months are matched to Data Pengusahaan by unit and "
-        "calendar month and weighted by net sales.",
-        "The latest year sets the value of lost energy (Rp/kWh) for each unit.",
-    ], BPP)
+        "calendar month.",
+        "The latest year sets each unit's prices: coal weighted by coal burned, biomass by biomass burned, "
+        "BPP by net sales. Without this file the model uses placeholder prices.",
+    ], PRICING)
     return _save(wb)
 
 
 TEMPLATES = {
     "failure": ("Template_Failure_Data.xlsx", failure_template),
     "production": ("Template_Data_Pengusahaan.xlsx", production_template),
-    "bpp": ("Template_BPP.xlsx", bpp_template),
+    "pricing": ("Template_Pricing.xlsx", pricing_template),
 }
 
 assert [c[0] for c in FAILURE] == [c for c in cal.FAILURE_COLUMNS], "FAILURE template out of sync with calibrate"
 assert [c[0] for c in PRODUCTION] == [c for c in cal.PRODUCTION_COLUMNS], "PRODUCTION template out of sync"
-assert [c[0] for c in BPP] == [c for c in cal.BPP_COLUMNS], "BPP template out of sync"
+assert [c[0] for c in PRICING] == [c for c in cal.PRICING_COLUMNS], "PRICING template out of sync"
 
 
 if __name__ == "__main__":

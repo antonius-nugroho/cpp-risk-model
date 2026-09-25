@@ -113,7 +113,8 @@ def write_workbook(path, cfg, n, seed, summary, targets, register, bridge, sens_
         "Triangular from historical years of the same inspection type (extensions excluded).",
         "Only statuses marked Include = Yes in the Status Mapping sheet of Failure_Data_highlighted.xlsx.",
         "In-sample: rates were estimated from the same years, so it checks consistency, not predictive skill.",
-        "EAF/EFOR targets, coal and biomass prices - replace with actual values in config/model_config.yaml.",
+        "EAF/EFOR targets - replace with actual values in config/model_config.yaml. Coal and biomass prices and BPP "
+        "come from the pricing file (economics.price_source); without it they are placeholders.",
         "All numbers in this workbook are simulation outputs written as values; rerun run.py to update them.",
         "Risk register: score = Likelihood x Consequence (formula). Rating: 1-4 Low, 5-9 Medium, 10-14 High, 15-25 Extreme.",
     ]})

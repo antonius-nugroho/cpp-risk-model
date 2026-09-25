@@ -4,14 +4,15 @@ Inputs
 ------
 data/Failure_Data_highlighted.xlsx   failure/derating log + "Status Mapping" sheet
 data/Data_Pengusahaan.xlsx           monthly production & performance data
-data/BPP.xlsx                        monthly BPP per unit (Rp/kWh) -> value of lost energy (optional)
+data/Pricing.xlsx                    monthly coal / biomass price and BPP per unit -> fuel cost, value of lost energy
+                                     (optional)
 
 Outputs
 -------
 config/model_config.yaml             model inputs (edit freely, then run run.py)
 config/calibration_evidence.xlsx     the evidence behind every calibrated number
 
-Usage:  python calibrate.py [--failure ...] [--production ...] [--bpp ...] [--forecast-year 2026]
+Usage:  python calibrate.py [--failure ...] [--production ...] [--pricing ...] [--forecast-year 2026]
 """
 from __future__ import annotations
 
@@ -76,7 +77,7 @@ PRODUCTION_COLUMNS = ["end_of_month", "unit", "kwh_produksi_kwh", "kwh_netto_pen
                       "pemakaian_bahan_bakar_batubara_kg", "nilai_kalor_batubara_kcal/kg", "pemakaian_biomassa_kg",
                       "nilai_kalor_biomassa_kcal/kg", "pemakaian_batubara,_hsd/bio_solar,_dan_biomassa_kcal",
                       "rencana_produksi_kwh", "rencana_penjualan_kwh", "rencana_pemakaian_batubara_kg"]
-BPP_COLUMNS = ["month", "bpp_rp_kwh", "unit_name"]
+PRICING_COLUMNS = ["month", "coal_price_rp_per_ton", "biomass_price_rp_per_ton", "bpp_rp_kwh", "unit_name"]
 
 
 def _src(x):
@@ -317,48 +318,61 @@ def reconciliation(ev: pd.DataFrame, ann: pd.DataFrame, ref: float) -> pd.DataFr
     return pd.DataFrame(rows)
 
 
-def load_bpp(src) -> pd.DataFrame:
-    """Monthly BPP (cost of generation, Rp/kWh) per unit: columns month, bpp_rp_kwh, unit_name."""
+# price column -> (config key, production column that weights each month)
+PRICE_FIELDS = {
+    "bpp_rp_kwh": ("energy_value_rp_kwh", "kwh_netto_penjualan_kwh"),
+    "coal_price_rp_per_ton": ("coal_price_rp_t", "pemakaian_bahan_bakar_batubara_kg"),
+    "biomass_price_rp_per_ton": ("biomass_price_rp_t", "pemakaian_biomassa_kg"),
+}
+
+
+def load_pricing(src) -> pd.DataFrame:
+    """Monthly prices per unit: month, coal_price_rp_per_ton, biomass_price_rp_per_ton, bpp_rp_kwh, unit_name."""
     b = pd.read_excel(_src(src))
-    missing = missing_columns(b, BPP_COLUMNS)
+    missing = missing_columns(b, PRICING_COLUMNS)
     if missing:
-        raise ValueError("BPP file is missing columns: " + ", ".join(missing))
+        raise ValueError("Pricing file is missing columns: " + ", ".join(missing))
     b["month"] = pd.to_datetime(b["month"])
-    b["bpp_rp_kwh"] = pd.to_numeric(b["bpp_rp_kwh"], errors="coerce")
+    for c in PRICE_FIELDS:
+        b[c] = pd.to_numeric(b[c], errors="coerce")
     b["unit_name"] = b["unit_name"].astype(str).str.strip()
-    return b.dropna(subset=["month", "bpp_rp_kwh"])
+    return b.dropna(subset=["month"])
 
 
-def energy_value_from_bpp(prod: pd.DataFrame, bpp: pd.DataFrame, year: int):
-    """Match BPP to the production months (unit + calendar month) and weight each month by its net sales.
+def prices_from_pricing(prod: pd.DataFrame, pricing: pd.DataFrame, year: int):
+    """Match prices to the production months (unit + calendar month) and weight each month by the quantity the
+    price applies to: BPP by net sales, coal price by coal burned, biomass price by biomass burned.
 
-    Returns ({unit: Rp/kWh for `year`}, plant Rp/kWh for `year`, monthly table, annual table).
+    Returns ({unit: {config key: value for `year`}}, {config key: plant value for `year`}, monthly table, annual table).
     """
-    p = prod[["end_of_month", "unit", "year", "kwh_netto_penjualan_kwh"]].copy()
+    weights = [w for _, w in PRICE_FIELDS.values()]
+    p = prod[["end_of_month", "unit", "year"] + weights].copy()
     p["period"] = p["end_of_month"].dt.to_period("M")
-    b = bpp.assign(period=bpp["month"].dt.to_period("M"))[["period", "unit_name", "bpp_rp_kwh"]]
+    b = pricing.assign(period=pricing["month"].dt.to_period("M"))[["period", "unit_name"] + list(PRICE_FIELDS)]
     m = p.merge(b, left_on=["period", "unit"], right_on=["period", "unit_name"], how="left").drop(columns="unit_name")
-    m["net_kwh"] = m.pop("kwh_netto_penjualan_kwh").fillna(0).clip(lower=0)
-    m["value_rp"] = m["bpp_rp_kwh"] * m["net_kwh"]
-    ok = m["bpp_rp_kwh"].notna()
+    for w in weights:
+        m[w] = m[w].fillna(0).clip(lower=0)
     m["period"] = m["period"].astype(str)
 
-    def wavg(g):
-        g = g[g["bpp_rp_kwh"].notna()]
-        w = g["net_kwh"].sum()
-        return float(g["value_rp"].sum() / w) if w > 0 else float(g["bpp_rp_kwh"].mean())
+    def wavg(g, col):
+        g = g[g[col].notna()]
+        w = g[PRICE_FIELDS[col][1]].sum()
+        if w > 0:
+            return float((g[col] * g[PRICE_FIELDS[col][1]]).sum() / w)
+        return float(g[col].mean()) if len(g) else float("nan")
 
     annual = pd.DataFrame([
         {"unit": u, "year": y, "months_matched": int(g["bpp_rp_kwh"].notna().sum()), "months_in_production": len(g),
-         "bpp_simple_mean": g["bpp_rp_kwh"].mean(), "bpp_net_sales_weighted": wavg(g)}
+         **{f"{c}_weighted": wavg(g, c) for c in PRICE_FIELDS}}
         for (u, y), g in m.groupby(["unit", "year"])])
-    latest = m[ok & (m["year"] == year)]
-    per_unit = {u: round(wavg(g), 2) for u, g in latest.groupby("unit")}
-    plant = round(wavg(latest), 2) if len(latest) else None
+    latest = m[m["year"] == year]
+    per_unit = {u: {key: round(wavg(g, c), 2) for c, (key, _) in PRICE_FIELDS.items() if g[c].notna().any()}
+                for u, g in latest.groupby("unit")}
+    plant = {key: round(wavg(latest, c), 2) for c, (key, _) in PRICE_FIELDS.items() if latest[c].notna().any()}
     return per_unit, plant, m, annual
 
 
-def build(failure_src, production_src, forecast_year, mapping=None, dmn_mw=None, bpp_src=None):
+def build(failure_src, production_src, forecast_year, mapping=None, dmn_mw=None, pricing_src=None):
     """Calibrate the model. Sources may be paths, file objects or bytes."""
     mapping = mapping if mapping is not None else load_mapping(failure_src)
     prod = load_production(production_src)
@@ -493,20 +507,20 @@ def build(failure_src, production_src, forecast_year, mapping=None, dmn_mw=None,
         "units": unit_cfg,
         "scenarios": {},
     }
-    # ---- value of lost energy from monthly BPP (latest data year) ---------------
-    bpp_tables = {}
-    if bpp_src is not None:
-        bpp_year = int(prod["year"].max())
-        per_unit, plant_bpp, bpp_monthly, bpp_annual = energy_value_from_bpp(prod, load_bpp(bpp_src), bpp_year)
-        if plant_bpp is not None:
+    # ---- prices from the monthly pricing file (latest data year) ----------------
+    price_tables = {}
+    if pricing_src is not None:
+        price_year = int(prod["year"].max())
+        per_unit, plant_prices, price_monthly, price_annual = prices_from_pricing(prod, load_pricing(pricing_src), price_year)
+        if plant_prices:
             eco = cfg["economics"]
-            eco["_note"] = (f"energy_value_rp_kwh = {bpp_year} BPP weighted by monthly net sales (plant; per-unit values "
-                            "under units.<unit>). Coal and biomass prices are PLACEHOLDERS - replace with contract values")
-            eco["energy_value_rp_kwh"] = plant_bpp
-            eco["energy_value_source"] = f"BPP {bpp_year}, net-sales weighted"
-            for u, v in per_unit.items():
-                unit_cfg[u]["energy_value_rp_kwh"] = v
-        bpp_tables = {"energy_value_bpp_annual": bpp_annual, "energy_value_bpp_monthly": bpp_monthly}
+            eco.update(plant_prices)
+            eco["_note"] = (f"Prices from the pricing file, {price_year}: coal weighted by coal burned, biomass by biomass "
+                            "burned, BPP (value of lost energy) by net sales. Plant values here; per-unit values under units.<unit>")
+            eco["price_source"] = f"Pricing {price_year}, quantity weighted"
+            for u, vals in per_unit.items():
+                unit_cfg[u].update(vals)
+        price_tables = {"prices_annual": price_annual, "prices_monthly": price_monthly}
     # ---- scenarios (treatments / opportunities) --------------------------------
     sc = cfg["scenarios"]
     if "serious" in po_specs:
@@ -556,7 +570,7 @@ def build(failure_src, production_src, forecast_year, mapping=None, dmn_mw=None,
         "correlations": pd.DataFrame(corr, columns=["variable_a", "variable_b", "rho"]),
         "status_mapping_used": pd.DataFrame(sorted(mapping.items()), columns=["status_code", "category"]),
         "reconciliation": reconciliation(ev, ann, ref),
-        **bpp_tables,
+        **price_tables,
     }
     return cfg, evid
 
@@ -576,17 +590,18 @@ def main():
     ap = argparse.ArgumentParser(description="Calibrate the risk model from plant data")
     ap.add_argument("--failure", default="data/Failure_Data_highlighted.xlsx")
     ap.add_argument("--production", default="data/Data_Pengusahaan.xlsx")
-    ap.add_argument("--bpp", default="data/BPP.xlsx", help="monthly BPP per unit; skipped if the file is missing")
+    ap.add_argument("--pricing", default="data/Pricing.xlsx",
+                    help="monthly coal / biomass price and BPP per unit; placeholders are used if the file is missing")
     ap.add_argument("--forecast-year", type=int, default=2026)
     ap.add_argument("--out", default="config")
     args = ap.parse_args()
 
-    bpp = args.bpp if args.bpp and Path(args.bpp).exists() else None
-    cfg, evid = build(args.failure, args.production, args.forecast_year, bpp_src=bpp)
+    pricing = args.pricing if args.pricing and Path(args.pricing).exists() else None
+    cfg, evid = build(args.failure, args.production, args.forecast_year, pricing_src=pricing)
     out = Path(args.out)
     out.mkdir(exist_ok=True)
     header = ("# Generated by calibrate.py from plant data. Edit values as needed, then run: python run.py\n"
-              "# Targets eaf_min / efor_max and the coal / biomass prices are PLACEHOLDERS - set your own.\n")
+              "# Targets eaf_min / efor_max are PLACEHOLDERS - set your own. Prices come from the pricing file when given.\n")
     (out / "model_config.yaml").write_text(header + yaml.safe_dump(_plain(cfg), sort_keys=False, allow_unicode=True,
                                                                      width=120), encoding="utf-8")
     with pd.ExcelWriter(out / "calibration_evidence.xlsx", engine="openpyxl") as xw:
@@ -596,7 +611,9 @@ def main():
     print(f"Events: {int(ev['source_rows'].sum())} log rows merged into {len(ev)} events, "
           f"{ev['event_class'].nunique()} event classes")
     eco = cfg["economics"]
-    print(f"Value of lost energy: {eco['energy_value_rp_kwh']:g} Rp/kWh ({eco.get('energy_value_source', 'placeholder - no BPP file')})")
+    src = eco.get("price_source", "PLACEHOLDERS - no pricing file")
+    print(f"Prices ({src}): coal {eco['coal_price_rp_t']:,.0f} Rp/t, biomass {eco['biomass_price_rp_t']:,.0f} Rp/t, "
+          f"lost energy {eco['energy_value_rp_kwh']:,.2f} Rp/kWh")
     print(f"Written: {out / 'model_config.yaml'} and {out / 'calibration_evidence.xlsx'}")
 
 

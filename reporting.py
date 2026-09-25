@@ -17,7 +17,7 @@ METRICS = [
     ("seh_h", "Outage extension (h)"), ("efdh_h", "EFDH (h)"), ("emdh_h", "EMDH (h)"), ("epdh_h", "EPDH (h)"),
     ("nphr_kcal_kwh", "Net plant heat rate (kcal/kWh)"), ("coal_kt", "Coal consumption (kt)"),
     ("biomass_kt", "Biomass consumption (kt)"), ("co2_kt", "CO2 from coal (kt)"),
-    ("fuel_cost_rp_bn", "Fuel cost (Rp bn) - placeholder prices"),
+    ("fuel_cost_rp_bn", "Fuel cost (Rp bn)"),
     ("lost_energy_value_rp_bn", "Value of lost energy (Rp bn) - at BPP"),
 ]
 RED, GREEN, GREY, BLUE, ORANGE = "#c0392b", "#27ae60", "#7f8c8d", "#2980b9", "#e67e22"

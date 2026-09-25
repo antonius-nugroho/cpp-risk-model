@@ -29,20 +29,22 @@ with c2:
     template_button("production")
     p_up = st.file_uploader("Data Pengusahaan", type=["xlsx"], key="production_upload", label_visibility="collapsed")
 
-with st.expander("BPP (opsional) - menilai energi yang hilang dengan biaya pokok produksi aktual"):
-    st.caption("File Excel dengan kolom month, bpp_rp_kwh, unit_name (satu baris per unit per bulan). Bulan dicocokkan "
-               "dengan Data Pengusahaan dan dibobot dengan penjualan neto. Tanpa file ini, dipakai harga energi sementara.")
-    template_button("bpp")
-    b_up = st.file_uploader("BPP", type=["xlsx"], key="bpp_upload", label_visibility="collapsed")
-    if b_up is not None and b_up.getvalue() != state.get("bpp_bytes"):
-        bpp_missing = state.bpp_missing_columns(b_up.getvalue())
-        if bpp_missing:
-            st.error("File BPP tidak memiliki kolom wajib: " + ", ".join(bpp_missing))
+with st.expander("Harga (opsional) - harga batubara, harga biomassa dan BPP per unit per bulan"):
+    st.caption("File Excel dengan kolom month, coal_price_rp_per_ton, biomass_price_rp_per_ton, bpp_rp_kwh, unit_name "
+               "(satu baris per unit per bulan). Bulan dicocokkan dengan Data Pengusahaan; harga batubara dibobot dengan "
+               "batubara yang dibakar, harga biomassa dengan biomassa, BPP dengan penjualan neto. Tanpa file ini, "
+               "dipakai harga sementara.")
+    template_button("pricing")
+    b_up = st.file_uploader("Harga", type=["xlsx"], key="pricing_upload", label_visibility="collapsed")
+    if b_up is not None and b_up.getvalue() != state.get("pricing_bytes"):
+        pricing_missing = state.pricing_missing_columns(b_up.getvalue())
+        if pricing_missing:
+            st.error("File harga tidak memiliki kolom wajib: " + ", ".join(pricing_missing))
         else:
-            st.session_state["bpp_bytes"], st.session_state["bpp_name"] = b_up.getvalue(), b_up.name
+            st.session_state["pricing_bytes"], st.session_state["pricing_name"] = b_up.getvalue(), b_up.name
             state.clear_from("calibration")
-    if state.get("bpp_bytes") is not None:
-        st.caption(f"Memakai {state.get('bpp_name')}.")
+    if state.get("pricing_bytes") is not None:
+        st.caption(f"Memakai {state.get('pricing_name')}.")
 
 if f_up is not None and f_up.getvalue() != state.get("failure_bytes"):
     st.session_state["failure_bytes"], st.session_state["failure_name"] = f_up.getvalue(), f_up.name
@@ -60,9 +62,9 @@ if missing_upload and state.SAMPLE_FAILURE.exists() and state.SAMPLE_PRODUCTION.
         st.session_state["failure_name"] = state.SAMPLE_FAILURE.name
         st.session_state["production_bytes"] = state.SAMPLE_PRODUCTION.read_bytes()
         st.session_state["production_name"] = state.SAMPLE_PRODUCTION.name
-        if state.SAMPLE_BPP.exists():
-            st.session_state["bpp_bytes"] = state.SAMPLE_BPP.read_bytes()
-            st.session_state["bpp_name"] = state.SAMPLE_BPP.name
+        if state.SAMPLE_PRICING.exists():
+            st.session_state["pricing_bytes"] = state.SAMPLE_PRICING.read_bytes()
+            st.session_state["pricing_name"] = state.SAMPLE_PRICING.name
         state.clear_from("data")
         st.rerun()
 
