@@ -113,7 +113,7 @@ st.markdown(
     f"- Rencana produksi dan batubara ({plan_gross:,.0f} GWh bruto, {plan_coal:,.0f} kt batubara) mengikuti tahun rencana terakhir di data.\n"
     + ("- Harga batubara, harga biomassa dan BPP berasal dari file harga "
        f"({t(cfg['economics']['price_source'])}).\n" if "price_source" in cfg["economics"] else
-       "- Harga batubara, harga biomassa dan nilai energi hilang masih sementara; angka rupiah bersifat ilustratif.\n") +
+       "- Harga batubara, harga biomassa dan BPP (Biaya Pokok Penyediaan) masih sementara; angka rupiah bersifat ilustratif.\n") +
     "- Jenis inspeksi: " + ", ".join(f"{u} {t(cfg['units'][u]['inspection_type'])}" for u in units) + ".")
 st.markdown("</div>", unsafe_allow_html=True)
 

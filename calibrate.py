@@ -4,7 +4,7 @@ Inputs
 ------
 data/Failure_Data_highlighted.xlsx   failure/derating log + "Status Mapping" sheet
 data/Data_Pengusahaan.xlsx           monthly production & performance data
-data/Pricing.xlsx                    monthly coal / biomass price and BPP per unit -> fuel cost, value of lost energy
+data/Pricing.xlsx                    monthly coal / biomass price and BPP (Biaya Pokok Penyediaan) per unit -> fuel cost, opportunity loss
                                      (optional)
 
 Outputs
@@ -320,7 +320,7 @@ def reconciliation(ev: pd.DataFrame, ann: pd.DataFrame, ref: float) -> pd.DataFr
 
 # price column -> (config key, production column that weights each month)
 PRICE_FIELDS = {
-    "bpp_rp_kwh": ("energy_value_rp_kwh", "kwh_netto_penjualan_kwh"),
+    "bpp_rp_kwh": ("bpp_rp_kwh", "kwh_netto_penjualan_kwh"),
     "coal_price_rp_per_ton": ("coal_price_rp_t", "pemakaian_bahan_bakar_batubara_kg"),
     "biomass_price_rp_per_ton": ("biomass_price_rp_t", "pemakaian_biomassa_kg"),
 }
@@ -500,7 +500,7 @@ def build(failure_src, production_src, forecast_year, mapping=None, dmn_mw=None,
         "shared_uncertainties": {"coal_gcv_kcal_kg": {"type": "normal", "mean": round(gcv_mean, 1), "sd": round(gcv_sd, 1)}},
         "economics": {
             "_note": "PLACEHOLDER prices - replace with actual contract values",
-            "coal_price_rp_t": 950000, "biomass_price_rp_t": 750000, "energy_value_rp_kwh": 1200,
+            "coal_price_rp_t": 950000, "biomass_price_rp_t": 750000, "bpp_rp_kwh": 1200,
         },
         "event_classes": classes,
         "planned_outage_specs": po_specs,
@@ -516,7 +516,7 @@ def build(failure_src, production_src, forecast_year, mapping=None, dmn_mw=None,
             eco = cfg["economics"]
             eco.update(plant_prices)
             eco["_note"] = (f"Prices from the pricing file, {price_year}: coal weighted by coal burned, biomass by biomass "
-                            "burned, BPP (value of lost energy) by net sales. Plant values here; per-unit values under units.<unit>")
+                            "burned, BPP (Biaya Pokok Penyediaan; opportunity loss = lost energy x BPP) by net sales. Plant values here; per-unit values under units.<unit>")
             eco["price_source"] = f"Pricing {price_year}, quantity weighted"
             for u, vals in per_unit.items():
                 unit_cfg[u].update(vals)
@@ -613,7 +613,7 @@ def main():
     eco = cfg["economics"]
     src = eco.get("price_source", "PLACEHOLDERS - no pricing file")
     print(f"Prices ({src}): coal {eco['coal_price_rp_t']:,.0f} Rp/t, biomass {eco['biomass_price_rp_t']:,.0f} Rp/t, "
-          f"lost energy {eco['energy_value_rp_kwh']:,.2f} Rp/kWh")
+          f"BPP {eco['bpp_rp_kwh']:,.2f} Rp/kWh")
     print(f"Written: {out / 'model_config.yaml'} and {out / 'calibration_evidence.xlsx'}")
 
 

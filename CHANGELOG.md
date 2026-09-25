@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.6 – BPP as Biaya Pokok Penyediaan; Opportunity loss
+- BPP means Biaya Pokok Penyediaan throughout; config key `energy_value_rp_kwh` is now `bpp_rp_kwh`
+  (older configs still load)
+- Lost net energy × BPP is reported as the **Opportunity loss** (`opportunity_loss_rp_bn`) instead of a
+  "value of lost energy"; the dashboard's lost-energy panel shows it in rupiah
+- Data preview: a "Harga" tab shows the loaded pricing file
+
 ## v3.5 – Pricing file replaces BPP file
 - `data/Pricing.xlsx` (month, coal_price_rp_per_ton, biomass_price_rp_per_ton, bpp_rp_kwh, unit_name) replaces
   `data/BPP.xlsx`; `calibrate.py --pricing` replaces `--bpp`

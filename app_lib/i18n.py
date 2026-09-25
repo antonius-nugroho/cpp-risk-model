@@ -40,7 +40,7 @@ TEXT = {
     "Net plant heat rate (kcal/kWh)": "Net plant heat rate (kcal/kWh)", "Coal consumption (kt)": "Konsumsi batubara (kt)",
     "Biomass consumption (kt)": "Konsumsi biomassa (kt)", "CO2 from coal (kt)": "CO2 dari batubara (kt)",
     "Fuel cost (Rp bn)": "Biaya bahan bakar (Rp miliar)",
-    "Value of lost energy (Rp bn) - at BPP": "Nilai energi hilang (Rp miliar) - pada BPP",
+    "Opportunity loss (Rp bn) - lost energy x BPP": "Opportunity loss (Rp miliar) - energi hilang × BPP",
     # production bridge (reporting.loss_bridge)
     "Plan (deterministic)": "Rencana (deterministik)", "Planned outage longer than mode": "Outage terencana lebih lama dari modus",
     "Forced outages": "Outage gangguan", "Maintenance outages": "Outage pemeliharaan", "Outage extensions": "Perpanjangan outage",
