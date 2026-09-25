@@ -13,7 +13,8 @@ streamlit run streamlit_app.py       # or F5 -> "Web app (Streamlit)"
 ```
 
 The browser opens at http://localhost:8501 with five steps. The app is in Bahasa Indonesia (page names below in
-brackets); the command-line tools and the Excel report stay in English.
+brackets); the command-line tools and the Excel report stay in English. Light and dark themes are available in the app
+menu (⋮ -> Settings -> Light / Dark); by default the app follows the system setting.
 
 | Page | What it does |
 |---|---|

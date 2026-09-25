@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.4 – Light and dark themes
+- `.streamlit/config.toml` defines `[theme.light]` and `[theme.dark]` (same control-room palette, dark variant);
+  users switch in the app menu (⋮ -> Settings); the default follows the system setting
+- Custom CSS and Plotly charts no longer hard-code light-mode text and background colours, so they follow the theme
+- Sidebar note (in Bahasa) on where to switch the theme
+
 ## v3.3 – Streamlit app in Bahasa Indonesia
 - All app text (pages, sidebar, checks, charts, table headers) is in Bahasa Indonesia
 - `app_lib/i18n.py` translates the labels produced by the model code (metrics, event descriptions, scenarios,

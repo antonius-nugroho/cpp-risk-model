@@ -1,9 +1,16 @@
-[theme]
-base = "light"
+# Two themes: users switch between them in the app menu (⋮ -> Settings -> Light / Dark).
+# The default follows the viewer's system setting.
+[theme.light]
 primaryColor = "#1E5FA8"
 backgroundColor = "#F3F5F6"
 secondaryBackgroundColor = "#E4E9EC"
 textColor = "#1D2B36"
+
+[theme.dark]
+primaryColor = "#5B9BE0"
+backgroundColor = "#121A21"
+secondaryBackgroundColor = "#1D2831"
+textColor = "#DDE4E9"
 
 [server]
 maxUploadSize = 50

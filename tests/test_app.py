@@ -2,7 +2,10 @@
 
 Run:  python tests/test_app.py
 """
+import sys
 import time
+
+sys.stdout.reconfigure(encoding="utf-8")  # page text includes symbols such as ⋮ and →
 from streamlit.testing.v1 import AppTest
 at = AppTest.from_file("../streamlit_app.py", default_timeout=600)
 at.run()
