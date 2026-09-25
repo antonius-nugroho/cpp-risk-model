@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.3 – Streamlit app in Bahasa Indonesia
+- All app text (pages, sidebar, checks, charts, table headers) is in Bahasa Indonesia
+- `app_lib/i18n.py` translates the labels produced by the model code (metrics, event descriptions, scenarios,
+  bridge steps, status meanings) at display time, so `calibrate.py`, `run.py` and the Excel report keep English labels
+- Month names in the file checks use Indonesian abbreviations
+
 ## v3.2 – Upload templates
 - Download buttons on the Data page for Failure data, Data Pengusahaan and BPP templates (`app_lib/templates.py`,
   also `python -m app_lib.templates`): empty data sheet, Columns sheet with descriptions and examples, and a

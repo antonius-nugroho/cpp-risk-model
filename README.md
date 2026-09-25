@@ -12,15 +12,16 @@ pip install -r requirements.txt      # adds streamlit and plotly
 streamlit run streamlit_app.py       # or F5 -> "Web app (Streamlit)"
 ```
 
-The browser opens at http://localhost:8501 with five steps:
+The browser opens at http://localhost:8501 with five steps. The app is in Bahasa Indonesia (page names below in
+brackets); the command-line tools and the Excel report stay in English.
 
 | Page | What it does |
 |---|---|
 | 1. Data | Upload Failure Data and Data Pengusahaan (or load the bundled Tarahan data); file checks; status mapping editor |
-| 2. Build model | Calibrate, adjust planned outage, targets, prices, event frequencies and scenarios; run the simulation |
-| 3. Model validation | Backtest against past years, failure log vs KPI reconciliation, calibration evidence |
-| 4. Dashboard | Annunciator KPI panel and interactive charts for the plant or each unit: outcomes, risks, drivers, scenarios |
-| 5. Model resume | Plain-language summary of outlook, risks, opportunities and validation; Excel report download |
+| 2. Build model (Bangun model) | Calibrate, adjust planned outage, targets, prices, event frequencies and scenarios; run the simulation |
+| 3. Model validation (Validasi model) | Backtest against past years, failure log vs KPI reconciliation, calibration evidence |
+| 4. Dashboard (Dasbor) | Annunciator KPI panel and interactive charts for the plant or each unit: outcomes, risks, drivers, scenarios |
+| 5. Model resume (Ringkasan model) | Plain-language summary of outlook, risks, opportunities and validation; Excel report download |
 
 The failure file can be the raw `Failure_Data.xlsx` (default mapping) or `Failure_Data_highlighted.xlsx`
 (its *Status Mapping* sheet is used). Either way the mapping can be changed on the Data page.
