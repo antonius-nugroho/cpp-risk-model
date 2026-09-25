@@ -39,7 +39,7 @@ TEXT = {
     "EFDH (h)": "EFDH (jam)", "EMDH (h)": "EMDH (jam)", "EPDH (h)": "EPDH (jam)",
     "Net plant heat rate (kcal/kWh)": "Net plant heat rate (kcal/kWh)", "Coal consumption (kt)": "Konsumsi batubara (kt)",
     "Biomass consumption (kt)": "Konsumsi biomassa (kt)", "CO2 from coal (kt)": "CO2 dari batubara (kt)",
-    "Fuel cost (Rp bn) - placeholder prices": "Biaya bahan bakar (Rp miliar) - harga sementara",
+    "Fuel cost (Rp bn)": "Biaya bahan bakar (Rp miliar)",
     "Value of lost energy (Rp bn) - at BPP": "Nilai energi hilang (Rp miliar) - pada BPP",
     # production bridge (reporting.loss_bridge)
     "Plan (deterministic)": "Rencana (deterministik)", "Planned outage longer than mode": "Outage terencana lebih lama dari modus",
@@ -78,7 +78,7 @@ TEXT = {
 PATTERNS = [
     (re.compile(r"^Serious inspection at (.+)$"), r"Inspeksi serius di \1"),
     (re.compile(r"^(.+) performs a serious inspection in the forecast year$"), r"\1 menjalani inspeksi serius pada tahun prakiraan"),
-    (re.compile(r"^BPP (\d{4}), net-sales weighted$"), r"BPP \1, dibobot penjualan neto"),
+    (re.compile(r"^Pricing (\d{4}), quantity weighted$"), r"Pricing \1, dibobot kuantitas"),
     (re.compile(r"^(.+) events$"), r"Kejadian \1"),
 ]
 

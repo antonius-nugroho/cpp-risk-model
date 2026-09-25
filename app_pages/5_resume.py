@@ -111,7 +111,9 @@ st.header("Asumsi yang perlu dikonfirmasi")
 st.markdown(
     f"- Target EAF {eaf_t:.0f}% dan batas EFOR {cfg['units'][units[0]]['targets']['efor_max'] * 100:.0f}% masih sementara.\n"
     f"- Rencana produksi dan batubara ({plan_gross:,.0f} GWh bruto, {plan_coal:,.0f} kt batubara) mengikuti tahun rencana terakhir di data.\n"
-    "- Harga batubara dan biomassa masih sementara; biaya bahan bakar dalam rupiah bersifat ilustratif. Energi yang hilang dinilai dengan BPP.\n"
+    + ("- Harga batubara, harga biomassa dan BPP berasal dari file harga "
+       f"({t(cfg['economics']['price_source'])}).\n" if "price_source" in cfg["economics"] else
+       "- Harga batubara, harga biomassa dan nilai energi hilang masih sementara; angka rupiah bersifat ilustratif.\n") +
     "- Jenis inspeksi: " + ", ".join(f"{u} {t(cfg['units'][u]['inspection_type'])}" for u in units) + ".")
 st.markdown("</div>", unsafe_allow_html=True)
 

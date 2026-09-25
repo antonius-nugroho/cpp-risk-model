@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 SAMPLE_FAILURE = DATA_DIR / "Failure_Data_highlighted.xlsx"
 SAMPLE_PRODUCTION = DATA_DIR / "Data_Pengusahaan.xlsx"
-SAMPLE_BPP = DATA_DIR / "BPP.xlsx"
+SAMPLE_PRICING = DATA_DIR / "Pricing.xlsx"
 
 
 # --------------------------------------------------------------------------
@@ -54,11 +54,11 @@ def template_bytes(kind: str) -> bytes:
     return TEMPLATES[kind][1]()
 
 
-def bpp_missing_columns(b: bytes) -> list[str]:
+def pricing_missing_columns(b: bytes) -> list[str]:
     try:
-        return cal.missing_columns(pd.read_excel(cal._src(b), nrows=0), cal.BPP_COLUMNS)
+        return cal.missing_columns(pd.read_excel(cal._src(b), nrows=0), cal.PRICING_COLUMNS)
     except Exception:
-        return list(cal.BPP_COLUMNS)
+        return list(cal.PRICING_COLUMNS)
 
 
 @st.cache_data(show_spinner=False)
@@ -141,8 +141,8 @@ def mapping_table(b: bytes, failure_df: pd.DataFrame) -> pd.DataFrame:
 # Model
 # --------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
-def calibrate_cached(failure_b: bytes, production_b: bytes, forecast_year: int, mapping_items: tuple, bpp_b: bytes | None = None):
-    return cal.build(failure_b, production_b, forecast_year, mapping=dict(mapping_items), bpp_src=bpp_b)
+def calibrate_cached(failure_b: bytes, production_b: bytes, forecast_year: int, mapping_items: tuple, pricing_b: bytes | None = None):
+    return cal.build(failure_b, production_b, forecast_year, mapping=dict(mapping_items), pricing_src=pricing_b)
 
 
 @st.cache_data(show_spinner=False, max_entries=4)

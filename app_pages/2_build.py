@@ -37,7 +37,7 @@ if go or (state.get("cfg") is not None and state.get("forecast_year") != fy):
     with st.spinner("Menggabungkan kejadian, menyesuaikan frekuensi dan durasi..."):
         try:
             cfg, ev = state.calibrate_cached(state.get("failure_bytes"), state.get("production_bytes"), int(fy), mapping_items,
-                                            state.get("bpp_bytes"))
+                                            state.get("pricing_bytes"))
         except Exception as exc:  # show the reason, keep the app alive
             st.error(f"Kalibrasi gagal: {exc}")
             st.stop()
@@ -102,20 +102,22 @@ for tab, (u, uc) in zip(tabs, cfg["units"].items()):
             st.dataframe(i18n.df(cf[cf["unit"] == u].drop(columns="unit"), values=["variable"]), hide_index=True, width="stretch")
 
 with tabs[len(cfg["units"])]:
-    st.caption("Harga hanya memengaruhi angka rupiah, bukan EAF, energi atau jumlah batubara. Harga batubara dan biomassa masih sementara.")
     e = cfg["economics"]
-    p1, p2, p3 = st.columns(3)
-    work["economics"]["coal_price_rp_t"] = p1.number_input("Harga batubara (Rp/t)", value=float(e["coal_price_rp_t"]), step=10000.0, key="w_coal_price")
-    work["economics"]["biomass_price_rp_t"] = p2.number_input("Harga biomassa (Rp/t)", value=float(e["biomass_price_rp_t"]), step=10000.0, key="w_bio_price")
-    per_unit = {u: uc["energy_value_rp_kwh"] for u, uc in cfg["units"].items() if "energy_value_rp_kwh" in uc}
-    if per_unit:
-        st.markdown(f"**Nilai energi yang hilang (Rp/kWh)** - {t(e.get('energy_value_source', 'BPP'))}")
-        for col, (u, v) in zip(st.columns(len(per_unit)), per_unit.items()):
-            work["units"][u]["energy_value_rp_kwh"] = col.number_input(u, value=float(v), step=10.0, key=f"w_{u}_energy_value")
+    prices = [("coal_price_rp_t", "Harga batubara (Rp/t)", 10000.0), ("biomass_price_rp_t", "Harga biomassa (Rp/t)", 10000.0),
+              ("energy_value_rp_kwh", "Nilai energi hilang / BPP (Rp/kWh)", 10.0)]
+    if "price_source" in e:
+        st.caption(f"Harga per unit dari file harga ({t(e['price_source'])}). Harga hanya memengaruhi angka rupiah, "
+                   "bukan EAF, energi atau jumlah batubara.")
+        for u, uc in cfg["units"].items():
+            st.markdown(f"**{u}**")
+            for col, (key, label, step) in zip(st.columns(3), prices):
+                work["units"][u][key] = col.number_input(label, value=float(uc.get(key, e[key])), step=step,
+                                                         key=f"w_{u}_{key}")
     else:
-        work["economics"]["energy_value_rp_kwh"] = p3.number_input("Nilai energi yang hilang (Rp/kWh) - sementara", value=float(e["energy_value_rp_kwh"]),
-                                                                   step=10.0, key="w_energy_value",
-                                                                   help="Unggah BPP di halaman Data untuk memakai biaya pokok produksi aktual")
+        st.caption("Harga sementara: unggah file harga di halaman Data untuk memakai harga aktual. Harga hanya "
+                   "memengaruhi angka rupiah, bukan EAF, energi atau jumlah batubara.")
+        for col, (key, label, step) in zip(st.columns(3), prices):
+            work["economics"][key] = col.number_input(f"{label} - sementara", value=float(e[key]), step=step, key=f"w_{key}")
 
 with tabs[len(cfg["units"]) + 1]:
     st.caption("Frekuensi digabung untuk semua unit. Pengali 0,5 membuat frekuensi suatu kelas menjadi separuhnya; 1,5 menaikkannya separuh.")

@@ -54,7 +54,7 @@ failure-log template also has an editable *Status Mapping* sheet.
 |---|---|
 | `data/Failure_Data_highlighted.xlsx` | Event log + *Status Mapping* sheet (only statuses with Include = Yes are modelled) |
 | `data/Data_Pengusahaan.xlsx` | POH, EAF, EFDH/EMDH/EPDH, production, fuel, GCV, heat rate, plans |
-| `data/BPP.xlsx` (optional) | Monthly BPP per unit (Rp/kWh), matched to Data Pengusahaan by unit and month; the latest year, weighted by net sales, values the lost energy (`energy_value_rp_kwh`) |
+| `data/Pricing.xlsx` (optional) | Monthly coal price (Rp/ton), biomass price (Rp/ton) and BPP (Rp/kWh) per unit, matched to Data Pengusahaan by unit and month. The latest year sets each unit's `coal_price_rp_t` (weighted by coal burned), `biomass_price_rp_t` (by biomass burned) and `energy_value_rp_kwh` (by net sales). Without it the prices are placeholders |
 
 ## How the calibration works
 
@@ -85,7 +85,8 @@ Bridge, Sensitivity, Scenarios, Backtest, calibration evidence and the merged ev
 ## Placeholders to replace
 
 In `config/model_config.yaml`: `targets.eaf_min`, `targets.efor_max` (set to your KPI
-contract), production/coal targets (default = 2025 plan), and the coal / biomass prices in `economics`.
+contract) and production/coal targets (default = 2025 plan). The prices are placeholders only when no
+`data/Pricing.xlsx` is given.
 
 ## Known simplifications
 

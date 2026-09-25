@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.5 – Pricing file replaces BPP file
+- `data/Pricing.xlsx` (month, coal_price_rp_per_ton, biomass_price_rp_per_ton, bpp_rp_kwh, unit_name) replaces
+  `data/BPP.xlsx`; `calibrate.py --pricing` replaces `--bpp`
+- Coal and biomass prices are no longer placeholders when the file is given: each unit gets its latest-year price,
+  weighted by coal / biomass burned (BPP stays weighted by net sales); `model.py` uses the unit prices for fuel cost
+- Evidence sheets `prices_annual` and `prices_monthly` replace `energy_value_bpp_*`
+- Streamlit: "Harga" upload and Template_Pricing.xlsx on the Data page; per-unit coal, biomass and BPP inputs on the
+  Prices tab
+
 ## v3.4 – Light and dark themes
 - `.streamlit/config.toml` defines `[theme.light]` and `[theme.dark]` (same control-room palette, dark variant);
   users switch in the app menu (⋮ -> Settings); the default follows the system setting

@@ -81,4 +81,5 @@ st.markdown(
     "di halaman Bangun model untuk mencerminkan perbedaan.\n"
     "- Tren kinerja pembangkit diteruskan dari tahun terakhir; prakiraan beberapa tahun memerlukan tren yang eksplisit.\n"
     "- Start unit dan pemakaian biodiesel tidak dimodelkan (sekitar 0,2% dari masukan panas).\n"
-    "- Target EAF dan EFOR serta harga batubara dan biomassa masih sementara sampai Anda memasukkan nilai sendiri.")
+    "- Target EAF dan EFOR masih sementara sampai Anda memasukkan nilai sendiri; harga juga sementara bila file harga "
+    "tidak diunggah.")
