@@ -78,7 +78,7 @@ PRICING = [
     ("month", "date", "Last day of the month - matched to end_of_month in Data Pengusahaan", "2025-01-31", "date"),
     ("coal_price_rp_per_ton", "Rp/ton", "Coal price for that unit and month", 1850000, "number"),
     ("biomass_price_rp_per_ton", "Rp/ton", "Biomass price for that unit and month", 860000, "number"),
-    ("bpp_rp_kwh", "Rp/kWh", "Biaya Pokok Penyediaan (BPP) for that unit and month - values the lost energy", 850.25, "number"),
+    ("bpp_rp_kwh", "Rp/kWh", "Biaya Pokok Penyediaan (BPP) for that unit and month - opportunity loss = lost energy x BPP", 850.25, "number"),
     ("unit_name", "text", "Unit name - same spelling as 'unit' in Data Pengusahaan", "Unit 1", "text"),
 ]
 

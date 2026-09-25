@@ -1,6 +1,6 @@
 import streamlit as st
 
-from app_lib import state, ui
+from app_lib import i18n, state, ui
 from app_lib.status_codes import CATEGORIES
 from app_lib.templates import TEMPLATES
 
@@ -68,8 +68,8 @@ if missing_upload and state.SAMPLE_FAILURE.exists() and state.SAMPLE_PRODUCTION.
         state.clear_from("data")
         st.rerun()
 
-fb, pb = state.get("failure_bytes"), state.get("production_bytes")
-if fb is None and pb is None:
+fb, pb, prb = state.get("failure_bytes"), state.get("production_bytes"), state.get("pricing_bytes")
+if fb is None and pb is None and prb is None:
     st.stop()
 
 st.divider()
@@ -95,13 +95,27 @@ with c2:
             ui.checklist(pinfo["checks"])
             ok_p = True
 
-if ok_f or ok_p:
+if ok_f or ok_p or prb is not None:
     with st.expander("Pratinjau data"):
-        t1, t2 = st.tabs(["Data gangguan", "Data Pengusahaan"])
+        t1, t2, t3 = st.tabs(["Data gangguan", "Data Pengusahaan", "Harga"])
         if ok_f:
             t1.dataframe(info["df"].head(200), width="stretch", height=320)
         if ok_p:
             t2.dataframe(pinfo["df"].head(200), width="stretch", height=320)
+        if prb is not None:
+            price_df = state.preview_pricing(prb)
+            t3.caption(f"{state.get('pricing_name')} · {len(price_df):,} baris · "
+                       f"{price_df['unit_name'].nunique()} unit · {i18n.month(price_df['month'].min())} "
+                       f"s.d. {i18n.month(price_df['month'].max())}")
+            t3.dataframe(price_df.head(200), width="stretch", height=320, hide_index=True,
+                         column_config={
+                             "month": st.column_config.DateColumn("month", format="MMM YYYY"),
+                             "coal_price_rp_per_ton": st.column_config.NumberColumn(format="localized"),
+                             "biomass_price_rp_per_ton": st.column_config.NumberColumn(format="localized"),
+                             "bpp_rp_kwh": st.column_config.NumberColumn(format="%.2f"),
+                         })
+        else:
+            t3.info("Belum ada file harga. Unggah di bagian \"Harga (opsional)\" di atas.")
 
 if not ok_f:
     st.stop()

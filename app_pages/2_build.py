@@ -104,7 +104,7 @@ for tab, (u, uc) in zip(tabs, cfg["units"].items()):
 with tabs[len(cfg["units"])]:
     e = cfg["economics"]
     prices = [("coal_price_rp_t", "Harga batubara (Rp/t)", 10000.0), ("biomass_price_rp_t", "Harga biomassa (Rp/t)", 10000.0),
-              ("energy_value_rp_kwh", "Nilai energi hilang / BPP (Rp/kWh)", 10.0)]
+              ("bpp_rp_kwh", "BPP - Biaya Pokok Penyediaan (Rp/kWh)", 10.0)]
     if "price_source" in e:
         st.caption(f"Harga per unit dari file harga ({t(e['price_source'])}). Harga hanya memengaruhi angka rupiah, "
                    "bukan EAF, energi atau jumlah batubara.")

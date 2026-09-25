@@ -62,6 +62,14 @@ def pricing_missing_columns(b: bytes) -> list[str]:
 
 
 @st.cache_data(show_spinner=False)
+def preview_pricing(b: bytes) -> pd.DataFrame:
+    """The pricing file as the model reads it (required columns first, sorted by unit and month)."""
+    d = cal.load_pricing(b)
+    extra = [c for c in d.columns if c not in cal.PRICING_COLUMNS]
+    return d[cal.PRICING_COLUMNS + extra].sort_values(["unit_name", "month"]).reset_index(drop=True)
+
+
+@st.cache_data(show_spinner=False)
 def inspect_failure(b: bytes) -> dict:
     sheet = cal.failure_sheet(b)
     df = cal.read_failure(b)

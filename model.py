@@ -138,8 +138,10 @@ def simulate_unit(cfg, unit, n, seed, disabled=frozenset(), plan=False):
     eco = cfg.get("economics", {})
     price = lambda key: float(uc.get(key, eco.get(key, 0)))  # unit price from the pricing file, else plant value
     fuel_cost = (coal_kg / 1000 * price("coal_price_rp_t") + bio_kg / 1000 * price("biomass_price_rp_t")) / 1e9
-    energy_value = price("energy_value_rp_kwh")
-    lost_value = (potential_net_mwh - net_mwh) * 1000 * energy_value / 1e9
+    # BPP = Biaya Pokok Penyediaan; configs written before v3.6 name it energy_value_rp_kwh
+    bpp = float(uc.get("bpp_rp_kwh", uc.get("energy_value_rp_kwh",
+                                            eco.get("bpp_rp_kwh", eco.get("energy_value_rp_kwh", 0)))))
+    opportunity_loss = (potential_net_mwh - net_mwh) * 1000 * bpp / 1e9   # lost net energy x BPP
 
     out = pd.DataFrame({
         "eaf_pct": eaf * 100, "efor_pct": efor * 100,
@@ -149,7 +151,7 @@ def simulate_unit(cfg, unit, n, seed, disabled=frozenset(), plan=False):
         "lost_net_gwh": (potential_net_mwh - net_mwh) / 1000,
         "nphr_kcal_kwh": x["nphr_kcal_kwh"], "coal_kt": coal_kg / 1e6, "biomass_kt": bio_kg / 1e6,
         "co2_kt": co2_t / 1000, "co2_intensity_t_mwh": co2_t / np.maximum(net_mwh, EPS),
-        "fuel_cost_rp_bn": fuel_cost, "lost_energy_value_rp_bn": lost_value,
+        "fuel_cost_rp_bn": fuel_cost, "opportunity_loss_rp_bn": opportunity_loss,
     })
     for nm, arr in x.items():
         out[f"in:{nm}"] = arr
@@ -166,7 +168,7 @@ def simulate_unit(cfg, unit, n, seed, disabled=frozenset(), plan=False):
 
 
 SUM_COLS = ["poh_h", "foh_h", "moh_h", "seh_h", "efdh_h", "emdh_h", "epdh_h", "net_gwh", "gross_gwh",
-            "lost_net_gwh", "coal_kt", "biomass_kt", "co2_kt", "fuel_cost_rp_bn", "lost_energy_value_rp_bn"]
+            "lost_net_gwh", "coal_kt", "biomass_kt", "co2_kt", "fuel_cost_rp_bn", "opportunity_loss_rp_bn"]
 
 
 def simulate_plant(cfg, n, seed, disabled=frozenset(), plan=False):

@@ -54,7 +54,7 @@ failure-log template also has an editable *Status Mapping* sheet.
 |---|---|
 | `data/Failure_Data_highlighted.xlsx` | Event log + *Status Mapping* sheet (only statuses with Include = Yes are modelled) |
 | `data/Data_Pengusahaan.xlsx` | POH, EAF, EFDH/EMDH/EPDH, production, fuel, GCV, heat rate, plans |
-| `data/Pricing.xlsx` (optional) | Monthly coal price (Rp/ton), biomass price (Rp/ton) and BPP (Rp/kWh) per unit, matched to Data Pengusahaan by unit and month. The latest year sets each unit's `coal_price_rp_t` (weighted by coal burned), `biomass_price_rp_t` (by biomass burned) and `energy_value_rp_kwh` (by net sales). Without it the prices are placeholders |
+| `data/Pricing.xlsx` (optional) | Monthly coal price (Rp/ton), biomass price (Rp/ton) and BPP (Rp/kWh) per unit, matched to Data Pengusahaan by unit and month. The latest year sets each unit's `coal_price_rp_t` (weighted by coal burned), `biomass_price_rp_t` (by biomass burned) and `bpp_rp_kwh`, Biaya Pokok Penyediaan (by net sales), which sets the opportunity loss = lost net energy × BPP. Without it the prices are placeholders |
 
 ## How the calibration works
 

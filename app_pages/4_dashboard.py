@@ -34,7 +34,8 @@ ui.annunciator([
     window("Produksi bruto", d["gross_gwh"], "GWh", plan_gross, digits=0),
     window("Konsumsi batubara", d["coal_kt"], "kt", plan_coal, higher=False, digits=0),
     {"name": "Energi hilang akibat kejadian tak terencana", "value": f"{d['lost_net_gwh'].mean():,.0f} GWh",
-     "range": f"P90 {d['lost_net_gwh'].quantile(.9):,.0f} GWh", "prob": None, "signal": "Energi neto, ekspektasi"},
+     "range": f"P90 {d['lost_net_gwh'].quantile(.9):,.0f} GWh", "prob": None,
+     "signal": f"Opportunity loss ≈ Rp {d['opportunity_loss_rp_bn'].mean():,.0f} miliar (energi hilang × BPP)"},
 ])
 st.caption("Warna panel: hijau peluang mencapai target 70% atau lebih, kuning 40-70%, merah di bawah 40%. "
            "Target EAF dan EFOR masih sementara sampai diatur di halaman Bangun model.")
