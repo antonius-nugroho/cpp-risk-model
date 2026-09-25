@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.2 – Upload templates
+- Download buttons on the Data page for Failure data, Data Pengusahaan and BPP templates (`app_lib/templates.py`,
+  also `python -m app_lib.templates`): empty data sheet, Columns sheet with descriptions and examples, and a
+  Status Mapping sheet for the failure log
+- Required-column checks now list every column the calibration reads (previously some missing columns only failed
+  during calibration); BPP uploads are checked too
+- "Load bundled Tarahan data" is shown only when the data files are present
+
 ## v3.1 – Value of lost energy from BPP
 - `data/BPP.xlsx` (monthly BPP per unit) is matched to Data Pengusahaan by unit and calendar month
 - `calibrate.py --bpp` sets `energy_value_rp_kwh` per unit (and plant) to the latest year's net-sales-weighted BPP

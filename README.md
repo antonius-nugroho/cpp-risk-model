@@ -43,6 +43,11 @@ Re-run calibration only when the data files change; editing the YAML and re-runn
 The plant data files, `config/model_config.yaml` and `config/calibration_evidence.xlsx` are not in the repository.
 Put the Excel files in `data/` and run `python calibrate.py` to build the config.
 
+To use your own plant's data, download the templates from the app's Data page (or run
+`python -m app_lib.templates`, which writes them to `templates/`). Each template has the required
+columns in its first sheet and a *Columns* sheet explaining every column with an example value; the
+failure-log template also has an editable *Status Mapping* sheet.
+
 | File | Used for |
 |---|---|
 | `data/Failure_Data_highlighted.xlsx` | Event log + *Status Mapping* sheet (only statuses with Include = Yes are modelled) |
