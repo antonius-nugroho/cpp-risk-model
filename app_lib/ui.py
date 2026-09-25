@@ -2,6 +2,8 @@
 
 Palette      steel ink #1D2B36, turbine-hall grey #F3F5F6, panel #E4E9EC,
              grid blue #1E5FA8; signal colours green #2F8F5B, amber #D99A1E, red #C4412D
+Themes       light and dark are defined in .streamlit/config.toml; this CSS inherits the theme text colour
+             (muted text uses opacity, rules use translucent grey) so it works in both
 Type         Barlow (signage-derived, industrial) for text, Barlow Semi Condensed for figures
 Signature    the annunciator panel: KPI windows lit by the probability of meeting target
 """
@@ -20,17 +22,18 @@ CSS = f"""
 html, body, [class*="css"], .stMarkdown, .stText, p, li, label, input, textarea, button, select {{
   font-family: 'Barlow', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }}
-h1, h2, h3 {{ font-family: 'Barlow', 'Segoe UI', sans-serif; color: {INK}; letter-spacing: -0.01em; }}
+h1, h2, h3 {{ font-family: 'Barlow', 'Segoe UI', sans-serif; letter-spacing: -0.01em; }}
 h1 {{ font-weight: 700; font-size: 2.1rem; }}
 h2 {{ font-weight: 600; font-size: 1.45rem; }}
 h3 {{ font-weight: 600; font-size: 1.15rem; }}
 .block-container {{ padding-top: 2.2rem; max-width: 1320px; }}
-.lede {{ font-size: 1.08rem; color: #41525E; max-width: 72ch; line-height: 1.5; margin-bottom: 1.2rem; }}
+.lede {{ font-size: 1.08rem; opacity: 0.82; max-width: 72ch; line-height: 1.5; margin-bottom: 1.2rem; }}
 .fig {{ font-family: 'Barlow Semi Condensed', 'Barlow', sans-serif; font-variant-numeric: tabular-nums; }}
 
 /* annunciator panel */
 .annunciator {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 6px; background: {INK}; padding: 6px; border-radius: 6px; margin: 0.4rem 0 1.4rem 0; }}
+  gap: 6px; background: {INK}; padding: 6px; border-radius: 6px; margin: 0.4rem 0 1.4rem 0;
+  border: 1px solid rgba(138,150,158,.35); }}
 .window {{ background: #2A3A46; border-radius: 3px; padding: 12px 14px 11px 14px; color: #C9D3DA;
   border-top: 3px solid #3B4B57; min-height: 108px; }}
 .window.green {{ border-top-color: {GREEN}; background: linear-gradient(180deg, rgba(47,143,91,.28), #2A3A46 70%); }}
@@ -44,13 +47,13 @@ h3 {{ font-weight: 600; font-size: 1.15rem; }}
 
 /* checklist rows */
 .check {{ display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: baseline;
-  padding: 6px 0; border-bottom: 1px solid {PANEL}; font-size: 0.95rem; }}
+  padding: 6px 0; border-bottom: 1px solid rgba(138,150,158,.28); font-size: 0.95rem; }}
 .check .dot {{ width: 9px; height: 9px; border-radius: 50%; background: {GREEN}; display: inline-block; }}
 .check .dot.warn {{ background: {AMBER}; }} .check .dot.info {{ background: {GREY}; }} .check .dot.bad {{ background: {RED}; }}
-.check .val {{ color: #41525E; text-align: right; font-variant-numeric: tabular-nums; }}
+.check .val {{ opacity: 0.8; text-align: right; font-variant-numeric: tabular-nums; }}
 
 .resume p {{ max-width: 76ch; line-height: 1.55; font-size: 1.02rem; }}
-section[data-testid="stSidebar"] .stepline {{ font-size: 0.92rem; padding: 3px 0; color: #41525E; }}
+section[data-testid="stSidebar"] .stepline {{ font-size: 0.92rem; padding: 3px 0; opacity: 0.85; }}
 @media (prefers-reduced-motion: reduce) {{ * {{ transition: none !important; animation: none !important; }} }}
 </style>
 """
@@ -129,6 +132,7 @@ def sidebar_status():
             for k in list(st.session_state.keys()):
                 del st.session_state[k]
             st.rerun()
+        st.caption("Tema terang / gelap: menu ⋮ di kanan atas → Settings → Light atau Dark.")
 
 
 INPUT_LABELS = {

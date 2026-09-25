@@ -9,16 +9,18 @@ from app_lib.i18n import t
 from app_lib.ui import AMBER, BLUE, GREEN, GREY, INK, RED
 
 FONT = "Barlow, Segoe UI, Roboto, sans-serif"
+GRID = "rgba(138,150,158,.25)"   # reads on light and dark backgrounds
 CAT_COLOR = {"FO": RED, "OS": RED, "FD": "#E07A5F", "MO": AMBER, "SE": "#B07D12", "MD": "#E9C46A", "PD": GREY}
 
 
 def _layout(fig, title=None, height=380, **kw):
     fig.update_layout(
-        title=dict(text=title, x=0, font=dict(size=15, color=INK)) if title else None,
-        font=dict(family=FONT, size=13, color=INK), height=height, margin=dict(l=10, r=10, t=46 if title else 12, b=10),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#FFFFFF", legend=dict(orientation="h", y=-0.18), **kw)
-    fig.update_xaxes(gridcolor="#E4E9EC", zeroline=False)
-    fig.update_yaxes(gridcolor="#E4E9EC", zeroline=False)
+        # text colour and backgrounds are left to the Streamlit theme, so charts follow light / dark mode
+        title=dict(text=title, x=0, font=dict(size=15)) if title else None,
+        font=dict(family=FONT, size=13), height=height, margin=dict(l=10, r=10, t=46 if title else 12, b=10),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=-0.18), **kw)
+    fig.update_xaxes(gridcolor=GRID, zeroline=False)
+    fig.update_yaxes(gridcolor=GRID, zeroline=False)
     return fig
 
 
@@ -26,7 +28,7 @@ def histogram(x: pd.Series, xlabel: str, title: str, target=None, target_label="
     fig = go.Figure(go.Histogram(x=x, nbinsx=70, marker_color=BLUE, opacity=0.8, name="Tahun simulasi",
                                  hovertemplate="%{x}<br>%{y} iterasi<extra></extra>"))
     for q, dash in [(0.1, "dot"), (0.5, "dash"), (0.9, "dot")]:
-        fig.add_vline(x=x.quantile(q), line=dict(color=INK, dash=dash, width=1))
+        fig.add_vline(x=x.quantile(q), line=dict(color=GREY, dash=dash, width=1))
     sub = f"P10 {x.quantile(.1):,.1f}, P50 {x.median():,.1f}, P90 {x.quantile(.9):,.1f}"
     if target is not None:
         p = (x >= target).mean() if higher_is_better else (x <= target).mean()
@@ -34,7 +36,7 @@ def histogram(x: pd.Series, xlabel: str, title: str, target=None, target_label="
         sub += f"<br><span style='color:{RED}'>{target_label} {target:,.1f}: peluang {p:.0%} tercapai</span>"
     fig.update_xaxes(title=xlabel)
     fig.update_yaxes(title="Iterasi")
-    fig = _layout(fig, f"{title}<br><span style='font-size:12px;color:#41525E'>{sub}</span>", height=400, showlegend=False)
+    fig = _layout(fig, f"{title}<br><span style='font-size:12px;color:{GREY}'>{sub}</span>", height=400, showlegend=False)
     fig.update_layout(margin=dict(t=78))
     return fig
 
@@ -66,7 +68,7 @@ def risk_matrix(reg: pd.DataFrame):
     jy = rng.uniform(-0.3, 0.3, len(reg))
     fig.add_trace(go.Scatter(
         x=reg["Consequence score (1-5)"] + jx, y=reg["Likelihood score (1-5)"] + jy, mode="markers+text",
-        text=reg["Rank"].astype(str), textposition="middle right", textfont=dict(size=11),
+        text=reg["Rank"].astype(str), textposition="middle right", textfont=dict(size=11, color=INK),
         marker=dict(size=8 + 60 * np.sqrt(reg["Share of expected event loss"]), color=INK, opacity=0.85,
                     line=dict(color="white", width=1)),
         customdata=np.stack([reg["Event class"], reg["Events per year (plant)"],
@@ -89,7 +91,7 @@ def pareto(reg: pd.DataFrame, top=12):
                            customdata=r["Description"].map(t), name="Ekspektasi kehilangan",
                            hovertemplate="<b>%{x}</b><br>%{customdata}<br>%{y:.1f} GWh/thn<extra></extra>"))
     fig.add_trace(go.Scatter(x=r["label"], y=cum, yaxis="y2", mode="lines+markers", name="Porsi kumulatif",
-                             line=dict(color=INK), hovertemplate="%{y:.0f}% kumulatif<extra></extra>"))
+                             line=dict(color=GREY), hovertemplate="%{y:.0f}% kumulatif<extra></extra>"))
     fig = _layout(fig, "Asal kehilangan energi tak terencana", height=520)
     fig.update_layout(yaxis=dict(title="Ekspektasi energi neto hilang (GWh/thn)"),
                       yaxis2=dict(overlaying="y", side="right", range=[0, 105], dtick=20, title="Porsi kumulatif (%)",
@@ -137,7 +139,7 @@ def backtest(bt: pd.DataFrame, metric="EAF (%)"):
                              hovertemplate="Aktual %{y:.2f}<br>persentil %{customdata:.0%}<extra></extra>"))
     if metric.startswith("EAF"):
         fig.add_trace(go.Scatter(x=lab, y=b["Reported KPI"], mode="markers", name="KPI dilaporkan",
-                                 marker=dict(symbol="x", size=10, color=INK)))
+                                 marker=dict(symbol="x", size=10, color=GREY)))
     fig.update_yaxes(title=metric)
     return _layout(fig, f"Backtest: {metric.split(' ')[0]} aktual terhadap rentang model", height=430)
 
@@ -180,7 +182,7 @@ def continuous_fit(cf: pd.DataFrame, variable: str, title: str):
                                  line=dict(width=3, color=BLUE)), name=f"Paling mungkin ({years[-1]})" if years else "Paling mungkin", showlegend=i == 0))
         fig.add_trace(go.Scatter(x=[r[y] for y in years], y=[r["unit"]] * len(years), mode="markers+text",
                                  text=years, textposition="top center", textfont=dict(size=10),
-                                 marker=dict(size=9, color=INK), name="Tahun teramati", showlegend=i == 0))
+                                 marker=dict(size=9, color=GREY), name="Tahun teramati", showlegend=i == 0))
     return _layout(fig, title, height=230)
 
 
