@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {"name": "Web app (Streamlit)", "type": "debugpy", "request": "launch", "module": "streamlit",
+     "args": ["run", "streamlit_app.py"], "cwd": "${workspaceFolder}", "console": "integratedTerminal"},
+    {"name": "CLI 1. Calibrate from data", "type": "debugpy", "request": "launch",
+     "program": "${workspaceFolder}/calibrate.py", "cwd": "${workspaceFolder}", "console": "integratedTerminal"},
+    {"name": "CLI 2. Run risk model", "type": "debugpy", "request": "launch",
+     "program": "${workspaceFolder}/run.py", "cwd": "${workspaceFolder}", "console": "integratedTerminal"}
+  ]
+}

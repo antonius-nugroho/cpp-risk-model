@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+outputs/
+.streamlit/secrets.toml
+
+# Plant data and values derived from it - kept local (public repo)
+data/*.xlsx
+config/model_config.yaml
+config/calibration_evidence.xlsx
