@@ -48,6 +48,19 @@ def status() -> dict:
 # Data inspection
 # --------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
+def template_bytes(kind: str) -> bytes:
+    from app_lib.templates import TEMPLATES
+    return TEMPLATES[kind][1]()
+
+
+def bpp_missing_columns(b: bytes) -> list[str]:
+    try:
+        return cal.missing_columns(pd.read_excel(cal._src(b), nrows=0), cal.BPP_COLUMNS)
+    except Exception:
+        return list(cal.BPP_COLUMNS)
+
+
+@st.cache_data(show_spinner=False)
 def inspect_failure(b: bytes) -> dict:
     sheet = cal.failure_sheet(b)
     df = cal.read_failure(b)

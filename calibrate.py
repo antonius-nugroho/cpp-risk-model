@@ -65,13 +65,18 @@ OUTAGE_CATS = {"FO", "MO", "SE", "OS"}
 
 
 DEFAULT_MAPPING = {"FO": "FO", "FO.OS": "OS", "MO": "MO", "PE": "SE", "ME": "SE", "FD": "FD", "MD": "MD", "PD": "PD"}
-FAILURE_COLUMNS = ["timestamp_start", "timestamp_stop", "unit_status", "failure_cause_code", "failure_impact",
-                   "loss_output_mw", "failure_duration_hours", "loss_output_mwh", "unit_no"]
+# required columns (the upload templates in app_lib/templates.py list the same columns, in this order)
+FAILURE_COLUMNS = ["timestamp_start", "timestamp_stop", "unit_no", "unit_status", "failure_cause_code", "failure_impact",
+                   "loss_output_mw", "failure_duration_hours", "loss_output_mwh", "root_cause_failure_analysis"]
 PRODUCTION_COLUMNS = ["end_of_month", "unit", "kwh_produksi_kwh", "kwh_netto_penjualan_kwh", "ph_periodehours_jam",
-                      "sh_servicehours_jam", "foh_forcedoutagehours_jam", "poh_plannedoutagehours_jam",
-                      "ah_availablehours_jam", "efdh_equivalentforcedderatinghours_jam",
-                      "pemakaian_bahan_bakar_batubara_kg", "nilai_kalor_batubara_kcal/kg",
-                      "pemakaian_batubara,_hsd/bio_solar,_dan_biomassa_kcal", "ncf_netcapacityfactor_pct"]
+                      "sh_servicehours_jam", "ah_availablehours_jam", "foh_forcedoutagehours_jam",
+                      "poh_plannedoutagehours_jam", "moh_maintenanceoutagehours_jam", "fo_omc_forcedoutageomchours_jam",
+                      "efdh_equivalentforcedderatinghours_jam", "emdh_equivalentmaintenancederatinghours_jam",
+                      "epdh_eqplannedderatinghours_jam", "ncf_netcapacityfactor_pct",
+                      "pemakaian_bahan_bakar_batubara_kg", "nilai_kalor_batubara_kcal/kg", "pemakaian_biomassa_kg",
+                      "nilai_kalor_biomassa_kcal/kg", "pemakaian_batubara,_hsd/bio_solar,_dan_biomassa_kcal",
+                      "rencana_produksi_kwh", "rencana_penjualan_kwh", "rencana_pemakaian_batubara_kg"]
+BPP_COLUMNS = ["month", "bpp_rp_kwh", "unit_name"]
 
 
 def _src(x):
@@ -315,6 +320,9 @@ def reconciliation(ev: pd.DataFrame, ann: pd.DataFrame, ref: float) -> pd.DataFr
 def load_bpp(src) -> pd.DataFrame:
     """Monthly BPP (cost of generation, Rp/kWh) per unit: columns month, bpp_rp_kwh, unit_name."""
     b = pd.read_excel(_src(src))
+    missing = missing_columns(b, BPP_COLUMNS)
+    if missing:
+        raise ValueError("BPP file is missing columns: " + ", ".join(missing))
     b["month"] = pd.to_datetime(b["month"])
     b["bpp_rp_kwh"] = pd.to_numeric(b["bpp_rp_kwh"], errors="coerce")
     b["unit_name"] = b["unit_name"].astype(str).str.strip()

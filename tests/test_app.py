@@ -7,6 +7,9 @@ from streamlit.testing.v1 import AppTest
 at = AppTest.from_file("../streamlit_app.py", default_timeout=600)
 at.run()
 print("start exc:", at.exception)
+dl=at.get("download_button"); print("template buttons:", len(dl))
+from app_lib.templates import TEMPLATES
+print("templates build:", all(len(make()) > 5000 for _, make in TEMPLATES.values()))
 btn=[b for b in at.button if b.label=="Load bundled Tarahan data"][0]; btn.click().run()
 print("data exc:", at.exception, [e.value for e in at.error], [w.value for w in at.warning][:3])
 print("captions:", [c.value for c in at.caption][-2:])

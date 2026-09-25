@@ -7,3 +7,7 @@ outputs/
 data/*.xlsx
 config/model_config.yaml
 config/calibration_evidence.xlsx
+
+# local tooling
+.claude/
+templates/
