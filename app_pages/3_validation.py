@@ -1,83 +1,84 @@
 import streamlit as st
 
-from app_lib import charts, state, ui
+from app_lib import charts, i18n, state, ui
 
-st.title("Model validation")
-ui.lede("Three checks: does the failure log agree with the monthly KPI data, does the model reproduce past years, "
-        "and what evidence stands behind each calibrated number.")
+st.title("Validasi model")
+ui.lede("Tiga pemeriksaan: apakah log gangguan sesuai dengan data KPI bulanan, apakah model dapat mereproduksi "
+        "tahun-tahun sebelumnya, dan bukti apa yang mendasari setiap angka hasil kalibrasi.")
 ui.need("calibration")
 cfg, ev, res = state.get("cfg"), state.get("evidence"), state.get("results")
 
 # ---------------------------------------------------------------------------
-st.header("Backtest against past years")
+st.header("Backtest terhadap tahun-tahun sebelumnya")
 if res is None or res["backtest"].empty:
-    st.info("Run the simulation with the backtest option on the Build model page to see this check.")
-    st.page_link("app_pages/2_build.py", label="Go to Build model", icon=":material/arrow_forward:")
+    st.info("Jalankan simulasi dengan opsi backtest di halaman Bangun model untuk melihat pemeriksaan ini.")
+    st.page_link("app_pages/2_build.py", label="Ke Bangun model", icon=":material/arrow_forward:")
 else:
     bt = res["backtest"]
     inside, total = int(bt["Inside P10-P90"].sum()), len(bt)
     eaf_bt = bt[bt["Metric"] == "EAF (%)"]
     mae = (eaf_bt["Actual"] - eaf_bt["P50"]).abs().mean()
     ui.annunciator([
-        {"name": "Actual values inside the P10-P90 band", "value": f"{inside} of {total}",
-         "range": "A well-calibrated model puts about 80% inside", "prob": None,
+        {"name": "Nilai aktual di dalam rentang P10-P90", "value": f"{inside} dari {total}",
+         "range": "Model yang terkalibrasi baik menempatkan sekitar 80% di dalamnya", "prob": None,
          "cls": "green" if 0.6 <= inside / total <= 0.95 else "amber",
-         "signal": f"{inside / total:.0%} coverage"},
-        {"name": "Mean absolute EAF error (P50 vs actual)", "value": f"{mae:.1f} pp",
-         "range": "Across all unit-years", "prob": None, "signal": ""},
-        {"name": "Unit-years replayed", "value": f"{len(eaf_bt)}",
-         "range": "Actual planned outage and inspection type used", "prob": None, "signal": ""},
+         "signal": f"cakupan {inside / total:.0%}"},
+        {"name": "Rata-rata galat absolut EAF (P50 vs aktual)", "value": f"{mae:.1f} poin %",
+         "range": "Seluruh unit-tahun", "prob": None, "signal": ""},
+        {"name": "Unit-tahun yang diulang", "value": f"{len(eaf_bt)}",
+         "range": "Memakai outage terencana dan jenis inspeksi aktual", "prob": None, "signal": ""},
     ])
-    metric = st.radio("Metric", ["EAF (%)", "EFOR (%)"], horizontal=True, label_visibility="collapsed")
+    metric = st.radio("Metrik", ["EAF (%)", "EFOR (%)"], horizontal=True, label_visibility="collapsed")
     st.plotly_chart(charts.backtest(bt, metric), width="stretch")
-    st.caption("Each past year is replayed with its actual planned outage hours and inspection type. The actual EAF "
-               "includes forced outage hours that the KPI classes as outside management control, so it can sit "
-               "slightly below the reported KPI. This is an in-sample check: frequencies were estimated from the same years.")
-    with st.expander("Backtest table"):
-        st.dataframe(bt, hide_index=True, width="stretch",
-                     column_config={"Percentile of actual": st.column_config.ProgressColumn(format="%.0f%%", min_value=0, max_value=1)})
+    st.caption("Setiap tahun historis diulang dengan jam outage terencana dan jenis inspeksi aktualnya. EAF aktual "
+               "memasukkan jam outage gangguan yang oleh KPI digolongkan di luar kendali manajemen (OMC), sehingga bisa "
+               "sedikit di bawah KPI yang dilaporkan. Ini pemeriksaan in-sample: frekuensi diestimasi dari tahun yang sama.")
+    with st.expander("Tabel backtest"):
+        st.dataframe(i18n.df(bt, values=["Inspection"]), hide_index=True, width="stretch",
+                     column_config={i18n.col("Percentile of actual"):
+                                    st.column_config.ProgressColumn(format="%.0f%%", min_value=0, max_value=1)})
 
 # ---------------------------------------------------------------------------
-st.header("Failure log against the KPI data")
+st.header("Log gangguan terhadap data KPI")
 rec = ev["reconciliation"]
 st.plotly_chart(charts.reconciliation(rec), width="stretch")
 g = rec.groupby("item")[["failure_log", "production_data"]].sum()
 g["difference %"] = (g["failure_log"] / g["production_data"] - 1) * 100
-st.dataframe(g.round(1), width="stretch")
-st.caption("Derating hours in the log are loss MWh divided by the derating reference "
-           f"({cfg['constants']['derate_reference_mw']:g} MW). Forced outage differences usually come from statuses "
-           "excluded in the mapping, such as FO.SYS, which the KPI data records as outside management control.")
-with st.expander("By unit and year"):
-    st.dataframe(rec, hide_index=True, width="stretch")
+st.dataframe(i18n.df(g.round(1), index=True), width="stretch")
+st.caption("Jam derating di log adalah MWh yang hilang dibagi referensi derating "
+           f"({cfg['constants']['derate_reference_mw']:g} MW). Selisih outage gangguan biasanya berasal dari status "
+           "yang tidak dihitung dalam pemetaan, seperti FO.SYS, yang dicatat di data KPI sebagai di luar kendali manajemen.")
+with st.expander("Per unit dan tahun"):
+    st.dataframe(i18n.df(rec, values=["item"]), hide_index=True, width="stretch")
 
 # ---------------------------------------------------------------------------
-st.header("Calibration evidence")
-t1, t2, t3, t4 = st.tabs(["Event classes", "Plant performance", "Planned outage", "Merged events"])
+st.header("Bukti kalibrasi")
+t1, t2, t3, t4 = st.tabs(["Kelas kejadian", "Kinerja pembangkit", "Outage terencana", "Kejadian gabungan"])
 with t1:
-    st.caption("Frequency: Poisson per unit-year pooled over units, with rate uncertainty Gamma(k + 0.5, 1/unit-years). "
-               "Duration: empirical for classes with 8 or more events, otherwise a lognormal matched to the observed mean.")
-    st.dataframe(ev["event_classes"], hide_index=True, width="stretch", height=460)
+    st.caption("Frekuensi: Poisson per unit-tahun digabung antar unit, dengan ketidakpastian laju Gamma(k + 0,5, 1/unit-tahun). "
+               "Durasi: empiris untuk kelas dengan 8 kejadian atau lebih, selain itu lognormal yang disesuaikan dengan rata-rata observasi.")
+    st.dataframe(i18n.df(ev["event_classes"], values=["description"]), hide_index=True, width="stretch", height=460)
 with t2:
     cf = ev["continuous_fits"]
     labels = {"nphr_kcal_kwh": "Net plant heat rate (kcal/kWh)", "net_output_factor": "Net output factor",
-              "aux_share": "Auxiliary power + transformer losses (share of gross)", "cofiring_share": "Biomass share of heat input"}
+              "aux_share": "Pemakaian sendiri + susut trafo (porsi dari bruto)", "cofiring_share": "Porsi biomassa dari masukan panas"}
     for var, lab in labels.items():
         if var in set(cf["variable"]):
             st.plotly_chart(charts.continuous_fit(cf, var, lab), width="stretch")
-    st.caption("The most likely value is the latest year. The best observed year bounds the upside and the downside "
-               "extends half the latest-to-best gap beyond the latest value.")
-    st.markdown("**Correlations (from the monthly data)**")
-    st.dataframe(ev["correlations"], hide_index=True)
+    st.caption("Nilai paling mungkin adalah tahun terakhir. Tahun terbaik yang teramati membatasi sisi atas, dan sisi bawah "
+               "diperpanjang setengah dari selisih tahun terakhir ke tahun terbaik di luar nilai tahun terakhir.")
+    st.markdown("**Korelasi (dari data bulanan)**")
+    st.dataframe(i18n.df(ev["correlations"], values=["variable_a", "variable_b"]), hide_index=True)
 with t3:
-    st.dataframe(ev["planned_outage"], hide_index=True, width="stretch")
-    st.json(cfg["planned_outage_specs"], expanded=False)
+    st.dataframe(i18n.df(ev["planned_outage"], values=["inspection_type"]), hide_index=True, width="stretch")
+    st.json({i18n.t(k): v for k, v in cfg["planned_outage_specs"].items()}, expanded=False)
 with t4:
-    st.dataframe(ev["events_merged"], hide_index=True, width="stretch", height=460)
+    st.dataframe(i18n.df(ev["events_merged"]), hide_index=True, width="stretch", height=460)
 
-st.header("Known limits")
+st.header("Keterbatasan yang diketahui")
 st.markdown(
-    "- Frequencies are pooled over units, so both units share the same event rates. Use the frequency multipliers "
-    "on the Build model page to reflect differences.\n"
-    "- Plant performance trends are carried forward from the latest year; a multi-year forecast would need an explicit trend.\n"
-    "- Starts and biodiesel use are not modelled (about 0.2% of heat input).\n"
-    "- EAF and EFOR targets and the coal and biomass prices are placeholders until you enter your own values.")
+    "- Frekuensi digabung antar unit, sehingga kedua unit memiliki laju kejadian yang sama. Gunakan pengali frekuensi "
+    "di halaman Bangun model untuk mencerminkan perbedaan.\n"
+    "- Tren kinerja pembangkit diteruskan dari tahun terakhir; prakiraan beberapa tahun memerlukan tren yang eksplisit.\n"
+    "- Start unit dan pemakaian biodiesel tidak dimodelkan (sekitar 0,2% dari masukan panas).\n"
+    "- Target EAF dan EFOR serta harga batubara dan biomassa masih sementara sampai Anda memasukkan nilai sendiri.")

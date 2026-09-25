@@ -10,6 +10,7 @@ import streamlit as st
 import yaml
 
 import calibrate as cal
+from app_lib.i18n import month, t
 import reporting as rp
 from model import simulate_plant
 
@@ -77,13 +78,13 @@ def inspect_failure(b: bytes) -> dict:
         neg = df["failure_duration_hours"] < 0
         bad_time = df["timestamp_start"].isna() | df["timestamp_stop"].isna()
         checks = [
-            ("Records", f"{len(df):,}", "ok"),
-            ("Units", ", ".join(sorted(df["unit_no"].dropna().astype(str).unique())), "ok"),
-            ("Period", f"{df['timestamp_start'].min():%d %b %Y} to {df['timestamp_start'].max():%d %b %Y}", "ok"),
-            ("Rows without unit_status", f"{int(no_status.sum())}", "warn" if no_status.any() else "ok"),
-            ("Rows with negative duration", f"{int(neg.sum())}", "warn" if neg.any() else "ok"),
-            ("Rows with unreadable timestamps", f"{int(bad_time.sum())}", "warn" if bad_time.any() else "ok"),
-            ("Status mapping sheet", "found - its Include flags are used" if has_mapping else "not found - default mapping used",
+            ("Jumlah baris", f"{len(df):,}", "ok"),
+            ("Unit", ", ".join(sorted(df["unit_no"].dropna().astype(str).unique())), "ok"),
+            ("Periode", f"{month(df['timestamp_start'].min(), day=True)} s.d. {month(df['timestamp_start'].max(), day=True)}", "ok"),
+            ("Baris tanpa unit_status", f"{int(no_status.sum())}", "warn" if no_status.any() else "ok"),
+            ("Baris dengan durasi negatif", f"{int(neg.sum())}", "warn" if neg.any() else "ok"),
+            ("Baris dengan timestamp tidak terbaca", f"{int(bad_time.sum())}", "warn" if bad_time.any() else "ok"),
+            ("Sheet Status Mapping", "ditemukan - kolom Include dipakai" if has_mapping else "tidak ditemukan - pemetaan bawaan dipakai",
              "ok" if has_mapping else "info"),
         ]
     return {"df": df, "sheet": sheet, "missing": missing, "checks": checks, "has_mapping": has_mapping,
@@ -100,18 +101,18 @@ def inspect_production(b: bytes) -> dict:
         dash = int((raw == "-").sum().sum())
         months = d.groupby("unit")["end_of_month"].agg(["count", "min", "max"])
         dmn = cal.detect_dmn(d)
-        checks = [("Monthly records", f"{len(d):,}", "ok")]
+        checks = [("Jumlah baris bulanan", f"{len(d):,}", "ok")]
         for u, r in months.iterrows():
             expected = (r["max"].year - r["min"].year) * 12 + r["max"].month - r["min"].month + 1
-            checks.append((f"{u} months", f"{r['count']} ({r['min']:%b %Y} to {r['max']:%b %Y})",
+            checks.append((f"Bulan {u}", f"{r['count']} ({month(r['min'])} s.d. {month(r['max'])})",
                            "ok" if r["count"] == expected else "warn"))
         checks += [
-            ("Net capable power detected (DMN)", ", ".join(f"{u}: {v:g} MW" for u, v in dmn.items()), "ok"),
-            ("Cells with '-' (treated as empty)", f"{dash}", "info" if dash else "ok"),
+            ("Daya mampu neto terdeteksi (DMN)", ", ".join(f"{u}: {v:g} MW" for u, v in dmn.items()), "ok"),
+            ("Sel berisi '-' (dianggap kosong)", f"{dash}", "info" if dash else "ok"),
         ]
         key = ["kwh_netto_penjualan_kwh", "nilai_kalor_batubara_kcal/kg", "pemakaian_batubara,_hsd/bio_solar,_dan_biomassa_kcal"]
         gaps = int(d[key].isna().sum().sum())
-        checks.append(("Missing values in production / fuel columns", f"{gaps}", "warn" if gaps else "ok"))
+        checks.append(("Nilai kosong di kolom produksi / bahan bakar", f"{gaps}", "warn" if gaps else "ok"))
     preview = raw.replace("-", pd.NA)
     for c in preview.columns:
         if preview[c].dtype == object and c not in ("unit",):
@@ -129,7 +130,7 @@ def mapping_table(b: bytes, failure_df: pd.DataFrame) -> pd.DataFrame:
     counts = failure_df["unit_status"].value_counts()
     rows = []
     for c in codes:
-        rows.append({"Status": c, "Meaning": STATUS_CODES.get(c, ("Not in status list", ""))[0],
+        rows.append({"Status": c, "Meaning": t(STATUS_CODES.get(c, ("Not in status list", ""))[0]),
                      "Records": int(counts.get(c, 0)),
                      "Category": from_file.get(c, default_category(c)),
                      "Include": c in from_file})

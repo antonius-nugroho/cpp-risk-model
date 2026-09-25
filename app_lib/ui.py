@@ -97,9 +97,9 @@ def need(stage: str):
     from app_lib import state
     s = state.status()
     msgs = {
-        "data": ("Upload the failure data and the production data first.", "app_pages/1_data.py", "Go to Data"),
-        "calibration": ("Build the model first: calibrate it from the uploaded data.", "app_pages/2_build.py", "Go to Build model"),
-        "results": ("Run the simulation first.", "app_pages/2_build.py", "Go to Build model"),
+        "data": ("Unggah data gangguan dan data produksi terlebih dahulu.", "app_pages/1_data.py", "Ke halaman Data"),
+        "calibration": ("Bangun model terlebih dahulu: kalibrasi dari data yang diunggah.", "app_pages/2_build.py", "Ke Bangun model"),
+        "results": ("Jalankan simulasi terlebih dahulu.", "app_pages/2_build.py", "Ke Bangun model"),
     }
     for step in ["data", "calibration", "results"]:
         if not s[step]:
@@ -115,8 +115,8 @@ def sidebar_status():
     from app_lib import state
     s = state.status()
     with st.sidebar:
-        st.markdown("#### Model status")
-        lines = [("Data loaded", s["data"]), ("Model calibrated", s["calibration"]), ("Simulation run", s["results"])]
+        st.markdown("#### Status model")
+        lines = [("Data dimuat", s["data"]), ("Model terkalibrasi", s["calibration"]), ("Simulasi dijalankan", s["results"])]
         for label, ok in lines:
             mark = "●" if ok else "○"
             color = GREEN if ok else GREY
@@ -124,25 +124,26 @@ def sidebar_status():
                         unsafe_allow_html=True)
         r = state.get("results")
         if r:
-            st.caption(f"{r['n']:,} iterations, seed {r['seed']}")
-        if s["data"] and st.button("Start over", width="stretch"):
+            st.caption(f"{r['n']:,} iterasi, seed {r['seed']}")
+        if s["data"] and st.button("Mulai ulang", width="stretch"):
             for k in list(st.session_state.keys()):
                 del st.session_state[k]
             st.rerun()
 
 
 INPUT_LABELS = {
-    "nphr_kcal_kwh": "Heat rate", "net_output_factor": "Net output factor", "aux_share": "Auxiliary power share",
-    "cofiring_share": "Co-firing share", "coal_gcv_kcal_kg": "Coal calorific value", "planned_outage_hours": "Planned outage hours",
+    "nphr_kcal_kwh": "Heat rate", "net_output_factor": "Net output factor", "aux_share": "Porsi pemakaian sendiri",
+    "cofiring_share": "Porsi co-firing", "coal_gcv_kcal_kg": "Nilai kalor batubara", "planned_outage_hours": "Jam outage terencana",
 }
 
 
 def driver_label(name: str, descriptions: dict | None = None) -> str:
-    """'events: FO_tube_leak' -> 'Forced outage - Boiler tube leak (events)';
+    """'events: FO_tube_leak' -> 'Outage gangguan - Kebocoran pipa boiler (kejadian)';
     'net_output_factor[Unit 3]' -> 'Net output factor, Unit 3'."""
+    from app_lib.i18n import t
     if name.startswith("events: "):
         cls = name[len("events: "):]
-        return f"{(descriptions or {}).get(cls, cls)} (events)"
+        return f"{t((descriptions or {}).get(cls, cls))} (kejadian)"
     base, _, unit = name.partition("[")
     label = INPUT_LABELS.get(base, base.replace("_", " "))
     return f"{label}, {unit.rstrip(']')}" if unit else label
