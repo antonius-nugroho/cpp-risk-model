@@ -62,7 +62,7 @@ ui.checklist([
 # ---------------------------------------------------------------------------
 st.header("Asumsi prakiraan")
 ui.lede("Nilai berasal dari kalibrasi. Ubah untuk menguji kasus what-if; nilai bawaan yang ditandai sementara "
-        "sebaiknya diganti dengan kontrak KPI dan harga Anda.")
+        "sebaiknya diganti dengan kontrak KPI dan estimasi harga.")
 work = copy.deepcopy(cfg)
 
 tabs = st.tabs(list(cfg["units"]) + ["Harga", "Frekuensi kejadian", "Skenario"])
